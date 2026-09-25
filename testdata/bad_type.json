@@ -1,0 +1,5 @@
+{
+  "properties": {
+    "checkout_timeout_ms": {"type": "number", "value": "3000"}
+  }
+}

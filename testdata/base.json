@@ -1,0 +1,35 @@
+{
+  "flags": {
+    "checkout_new": {
+      "default_variation": "off",
+      "allow_override": ["checkout_new"],
+      "rules": [
+        {
+          "name": "internal_testers",
+          "attribute": "group",
+          "operator": "in",
+          "values": ["staff", "qa"],
+          "percentage": 100,
+          "variation": "on"
+        },
+        {
+          "name": "beta_10pct",
+          "attribute": "region",
+          "operator": "eq",
+          "values": ["cn"],
+          "percentage": 10,
+          "bucket_by": "user_id",
+          "variation": "on"
+        }
+      ]
+    },
+    "legacy_paywall": {
+      "default_variation": "off",
+      "rules": []
+    }
+  },
+  "properties": {
+    "checkout_timeout_ms": {"type": "number", "value": 3000},
+    "theme": {"type": "string", "value": "light"}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "flags": {
+    "checkout_new": {
+      "default_variation": "on",
+      "allow_override": [],
+      "rules": [
+        {
+          "name": "kill_switch_regions",
+          "attribute": "region",
+          "operator": "in",
+          "values": ["eu"],
+          "percentage": 100,
+          "variation": "off"
+        }
+      ]
+    }
+  },
+  "properties": {
+    "theme": {"type": "string", "value": "dark"}
+  }
+}

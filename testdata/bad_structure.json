@@ -1,0 +1,10 @@
+{
+  "flags": {
+    "checkout_new": {
+      "default_variation": "off",
+      "rules": [
+        {"name": "bad", "attribute": "region", "operator": "eq", "values": ["cn"], "percentage": 150, "variation": "on"}
+      ]
+    }
+  }
+}
