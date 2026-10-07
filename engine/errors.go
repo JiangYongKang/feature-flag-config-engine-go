@@ -21,3 +21,6 @@ type Error struct {
 func (e *Error) Error() string { return string(e.Reason) + ": " + e.Message }
 
 func newError(r Reason, msg string) *Error { return &Error{Reason: r, Message: msg} }
+
+// ReasonUnknownVersion 标识回滚目标版本不在历史中。
+const ReasonUnknownVersion Reason = "UNKNOWN_VERSION"
