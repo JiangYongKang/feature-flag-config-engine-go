@@ -94,24 +94,7 @@ func (f *FileSource) Load() (map[string]FlagDef, error) {
 		return nil, newError(ReasonSourceMissing,
 			fmt.Sprintf("source %q: read %s: %v", f.SrcName, f.Path, err))
 	}
-	var doc fileDoc
-	if err := json.Unmarshal(data, &doc); err != nil {
-		return nil, newError(ReasonInvalidStructure,
-			fmt.Sprintf("source %q: parse %s: %v", f.SrcName, f.Path, err))
-	}
-	out := make(map[string]FlagDef, len(doc.Flags))
-	for _, ff := range doc.Flags {
-		def, err := flagFromFile(ff)
-		if err != nil {
-			return nil, fmt.Errorf("source %q: %w", f.SrcName, err)
-		}
-		if _, dup := out[def.Key]; dup {
-			return nil, newError(ReasonInvalidStructure,
-				fmt.Sprintf("source %q: duplicate flag key %q", f.SrcName, def.Key))
-		}
-		out[def.Key] = def
-	}
-	return out, nil
+	return parseFlagDoc(f.SrcName, data)
 }
 
 // flagFromFile 校验并转换文件中的开关定义；类型不匹配或结构非法按可区分原因拒绝。

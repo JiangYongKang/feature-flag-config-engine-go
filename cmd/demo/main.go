@@ -77,4 +77,51 @@ func main() {
 	d, _ = eng.Evaluate("new-checkout", map[string]string{"user_id": "alice"})
 	fmt.Printf("after failed reload: alice new-checkout=%v version=%d (旧配置继续生效)\n",
 		d.Value.Bool, d.Version)
+
+	// 发布前试算：一份灰度 25% 的候选内容，只出结论不动线上
+	candidate := &engine.ContentSource{
+		SrcName:     "candidate",
+		SrcPriority: 0,
+		Content: `{"flags":[
+			{"key":"new-checkout","type":"bool","default":false,
+			 "rollout":{"attribute":"user_id","percentage":25}},
+			{"key":"banner-text","type":"string","default":"hello"}
+		]}`,
+	}
+	rep, err := eng.Simulate(engine.SimulationOptions{
+		Probes: map[string][]string{"user_id": {"alice", "bob", "carol"}},
+	}, candidate)
+	if err != nil {
+		log.Fatalf("simulate: %v", err)
+	}
+	fmt.Printf("simulate: added=%v deleted=%v modified=%v unchanged=%v (线上仍为 v%d)\n",
+		rep.AddedKeys, rep.DeletedKeys, rep.ModifiedKeys, rep.UnchangedKeys,
+		eng.Snapshot().Version)
+	for _, ch := range rep.Changes {
+		if ch.Rollout != nil {
+			fmt.Printf("  rollout trend key=%s direction=%s %.0f%%->%.0f%%\n",
+				ch.Key, ch.Rollout.Direction,
+				ch.Rollout.BeforePercentage, ch.Rollout.AfterPercentage)
+			for _, p := range ch.Rollout.Probes {
+				fmt.Printf("    probe %s=%s before=%v after=%v %s\n",
+					p.AttrName, p.AttrValue, p.BeforeHit, p.AfterHit, p.Note)
+			}
+		}
+	}
+
+	// 正式发布候选并验证灰度变化，然后整体回滚到历史 v1
+	if err := eng.Publish(candidate); err != nil {
+		log.Fatalf("publish: %v", err)
+	}
+	d, _ = eng.Evaluate("new-checkout", map[string]string{"user_id": "alice"})
+	published := d.Value.Bool
+	fmt.Printf("published candidate: alice new-checkout=%v version=%d\n",
+		d.Value.Bool, d.Version)
+	rb, err := eng.Rollback(1)
+	if err != nil {
+		log.Fatalf("rollback: %v", err)
+	}
+	d, _ = eng.Evaluate("new-checkout", map[string]string{"user_id": "alice"})
+	fmt.Printf("rollback to v1 content (now v%d): alice new-checkout=%v (回滚前发布版=%v)\n",
+		rb.Version, d.Value.Bool, published)
 }
